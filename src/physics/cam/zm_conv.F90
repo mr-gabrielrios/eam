@@ -245,7 +245,7 @@ subroutine zm_convr(lchnk   ,ncol    , &
                     mu      ,md      ,du      ,eu      ,ed      , &
                     dp      ,dsubcld ,jt      ,maxg    ,ideep   , &
                     lengath ,ql      ,rliq    ,landfrac, &
-                    t_star  ,q_star, dcape)
+                    t_star  ,q_star, dcape, hmn)
 !----------------------------------------------------------------------- 
 ! 
 ! Purpose: 

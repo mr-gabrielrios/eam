@@ -176,6 +176,9 @@ subroutine zm_conv_init(pref_edge)
     call addfld ('ZMICVU',     (/ 'lev' /), 'A', 'm/s', 'ZM in-cloud V updrafts')
     call addfld ('ZMICVD',     (/ 'lev' /), 'A', 'm/s', 'ZM in-cloud V downdrafts')
     
+    ! GR: addition of fields for ZM analysis
+    call addfld ('DCAPE',       horiz_only, 'A',   'J/kg/s', 'Tendency of convectively available potential energy')
+    
     call phys_getopts( history_budget_out = history_budget, &
                        history_budget_histfile_num_out = history_budget_histfile_num, &
                        convproc_do_aer_out = convproc_do_aer, & 
@@ -420,6 +423,9 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
    call t_stopf ('zm_convr')
 
    call outfld('CAPE', cape, pcols, lchnk)        ! RBN - CAPE output
+
+   call outfld('DCAPE', dcape, pcols, lchnk)      ! GR - DCAPE output
+
 !
 ! Output fractional occurance of ZM convection
 !

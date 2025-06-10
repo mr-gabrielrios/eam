@@ -178,6 +178,8 @@ subroutine zm_conv_init(pref_edge)
     
     ! GR: addition of fields for ZM analysis
     call addfld ('DCAPE',       horiz_only, 'A',   'J/kg/s', 'Tendency of convectively available potential energy')
+    call addfld ('ZMMSEU', (/ 'lev' /), 'A',   'J/m2/s', 'ZM convection updraft MSE transport')
+    call addfld ('ZMMSED', (/ 'lev' /), 'A',   'J/m2/s', 'ZM convection downdraft MSE transport')
     
     call phys_getopts( history_budget_out = history_budget, &
                        history_budget_histfile_num_out = history_budget_histfile_num, &
@@ -350,6 +352,12 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
    real(r8) :: cape(pcols)        ! w  convective available potential energy.
    real(r8) :: mu_out(pcols,pver)
    real(r8) :: md_out(pcols,pver)
+   
+   ! GR: moist static energy container
+   real(r8) :: hmn(pcols,pver)
+   ! GR: updraft and downdraft moist static energy transport   
+   real(r8) :: hmnu_out(pcols,pver)
+   real(r8) :: hmnd_out(pcols,pver)
 
    ! used in momentum transport calculation
    real(r8) :: winds(pcols, pver, 2)
@@ -375,6 +383,9 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
    ftem = 0._r8   
    mu_out(:,:) = 0._r8
    md_out(:,:) = 0._r8
+   ! GR: initialize updraft and downdraft moist static energy transport
+   hmnu_out(:,:) = 0._r8
+   hmnd_out(:,:) = 0._r8
    wind_tends(:ncol,:pver,:) = 0.0_r8
 
    call physics_state_copy(state,state1)             ! copy state to local state1.
@@ -419,7 +430,7 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
                     mu,md,du,eu,ed      , &
                     dp ,dsubcld ,jt,maxg,ideep   , &
                     lengath ,ql      ,rliq  ,landfrac,  &
-                    t_star, q_star, dcape)  
+                    t_star, q_star, dcape   ,hmn)  
    call t_stopf ('zm_convr')
 
    call outfld('CAPE', cape, pcols, lchnk)        ! RBN - CAPE output
@@ -446,6 +457,8 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
          ii = ideep(i)
          mu_out(ii,k) = mu(i,k) * 100._r8/gravit
          md_out(ii,k) = md(i,k) * 100._r8/gravit
+         hmnu_out(ii,k) = hmn(i,k) * mu(i,k) ! GR: upward convective transport of MSE
+         hmnd_out(ii,k) = hmn(i,k) * md(i,k) ! GR: downward convective transport of MSE
       end do
    end do
 
@@ -453,9 +466,13 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
    if(convproc_do_aer .or. convproc_do_gas) then 
       call outfld('ZMMU', mu_out,      pcols, lchnk)
       call outfld('ZMMD', md_out,      pcols, lchnk)
+      call outfld('ZMMSEU', hmnu_out,      pcols, lchnk)
+      call outfld('ZMMSED', hmnd_out,      pcols, lchnk)
    else
       call outfld('ZMMU', mu_out(1,1), pcols, lchnk)
       call outfld('ZMMD', md_out(1,1), pcols, lchnk)
+      call outfld('ZMMSEU', hmnu_out(1,1), pcols, lchnk)
+      call outfld('ZMMSED', hmnd_out(1,1), pcols, lchnk)
    endif
 
    ftem(:ncol,:pver) = ptend_loc%s(:ncol,:pver)/cpair

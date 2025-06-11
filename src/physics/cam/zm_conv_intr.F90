@@ -457,8 +457,8 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
          ii = ideep(i)
          mu_out(ii,k) = mu(i,k) * 100._r8/gravit
          md_out(ii,k) = md(i,k) * 100._r8/gravit
-         hmnu_out(ii,k) = hmn(i,k) * mu(i,k) ! GR: upward convective transport of MSE
-         hmnd_out(ii,k) = hmn(i,k) * md(i,k) ! GR: downward convective transport of MSE
+         hmnu_out(ii,k) = hmn(i,k) * mu(i,k) * 100._r8/gravit ! GR: upward convective transport of MSE
+         hmnd_out(ii,k) = hmn(i,k) * md(i,k) * 100._r8/gravit ! GR: downward convective transport of MSE
       end do
    end do
 

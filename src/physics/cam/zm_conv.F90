@@ -330,7 +330,7 @@ subroutine zm_convr(lchnk   ,ncol    , &
                     t_star  ,q_star, dcape,   &
                     aero    ,qi      ,dif     ,dnlf    ,dnif    , & 
                     dsf     ,dnsf    ,sprd    ,rice    ,frz     , &
-                    mudpcu  ,lambdadpcu, microp_st, wuc)
+                    mudpcu  ,lambdadpcu, microp_st, wuc, hmn)
 !----------------------------------------------------------------------- 
 ! 
 ! Purpose: 
@@ -512,6 +512,8 @@ subroutine zm_convr(lchnk   ,ncol    , &
    real(r8), intent(out) :: prec(pcols)
    real(r8), intent(out) :: rliq(pcols)   ! reserved liquid (not yet in cldliq) for energy integrals
    real(r8), intent(out) :: dcape(pcols)           ! output dynamical CAPE
+   
+   real(r8), intent(out) :: hmn(pcols,pver) ! wg moist static energy. 
 
 
    real(r8) zs(pcols)
@@ -604,7 +606,6 @@ subroutine zm_convr(lchnk   ,ncol    , &
    real(r8) su(pcols,pver)             ! wg grid slice of dry static energy in updraft.
    real(r8) qs(pcols,pver)             ! wg grid slice of saturation mixing ratio.
    real(r8) shat(pcols,pver)           ! wg grid slice of upper interface dry static energy.
-   real(r8) hmn(pcols,pver)            ! wg moist static energy.
    real(r8) hsat(pcols,pver)           ! wg saturated moist static energy.
    real(r8) qlg(pcols,pver)
    real(r8) dudt(pcols,pver)           ! wg u-wind tendency at gathered points.

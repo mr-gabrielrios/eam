@@ -239,6 +239,10 @@ subroutine zm_conv_init(pref_edge)
 
     call addfld ('ZMMU', (/ 'lev' /), 'A',   'kg/m2/s', 'ZM convection updraft mass flux')
     call addfld ('ZMMD', (/ 'lev' /), 'A',   'kg/m2/s', 'ZM convection downdraft mass flux')
+    
+    call addfld ('ZMMSE', (/ 'lev' /), 'A',   'J/kg', 'ZM convection moist static energy')
+    call addfld ('ZMMSEU', (/ 'lev' /), 'A',  'J/m2/s', 'ZM convection updraft MSE transport')
+    call addfld ('ZMMSED', (/ 'lev' /), 'A',  'J/m2/s', 'ZM convection downdraft MSE transport')
 
     call addfld ('ZMUPGU',    (/ 'lev' /), 'A', 'm/s2', 'zonal force from ZM updraft pressure gradient term')
     call addfld ('ZMUPGD',    (/ 'lev' /), 'A', 'm/s2', 'zonal force from ZM downdraft pressure gradient term')
@@ -753,6 +757,10 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
    real(r8) :: mu_out(pcols,pver)
    real(r8) :: md_out(pcols,pver)
 
+   ! GR: ZM-specific moist static energy fields
+   real(r8) :: hmn(pcols,pver) 
+   real(r8) :: hmnu_out(pcols,pver)
+   real(r8) :: hmnd_out(pcols,pver)
 
    ! used in momentum transport calculation
    real(r8) :: winds(pcols, pver, 2)
@@ -909,6 +917,11 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
    ftem = 0._r8   
    mu_out(:,:) = 0._r8
    md_out(:,:) = 0._r8
+   
+   ! GR: initialize MSE transport fields
+   hmnu_out(:,:) = 0._r8
+   hmnd_out(:,:) = 0._r8
+   
    dlftot(:,:) = 0._r8
    wind_tends(:ncol,:pver,:) = 0.0_r8
 
@@ -1009,7 +1022,7 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
                     lengath ,ql      ,rliq  ,landfrac,  &
                     t_star, q_star, dcape, &  
                     aero(lchnk), qi, dif, dnlf, dnif, dsf, dnsf, sprd, rice, frz, mudpcu, &
-                    lambdadpcu,  microp_st, wuc)
+                    lambdadpcu,  microp_st, wuc, hmn)
 
    if (zm_microp) then
      dlftot(:ncol,:pver) = dlf(:ncol,:pver) + dif(:ncol,:pver) + dsf(:ncol,:pver)
@@ -1171,6 +1184,8 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
    mcon(:ncol,:pver) = mcon(:ncol,:pver) * 100._r8/gravit
 
    call outfld('CMFMCDZM', mcon, pcols, lchnk)
+   ! GR: output MSE diagnostic
+   call outfld('ZMMSE', hmn, pcols, lchnk)
 
    ! Store upward and downward mass fluxes in un-gathered arrays
    ! + convert from mb/s to kg/m^2/s
@@ -1179,6 +1194,8 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
          ii = ideep(i)
          mu_out(ii,k) = mu(i,k) * 100._r8/gravit
          md_out(ii,k) = md(i,k) * 100._r8/gravit
+         hmnu_out(ii,k) = hmn(i,k) * mu(i,k) * 100._r8/gravit
+         hmnd_out(ii,k) = hmn(i,k) * md(i,k) * 100._r8/gravit
       end do
    end do
 
@@ -1186,9 +1203,13 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
    if(convproc_do_aer .or. convproc_do_gas) then 
       call outfld('ZMMU', mu_out,      pcols, lchnk)
       call outfld('ZMMD', md_out,      pcols, lchnk)
+      call outfld('ZMMSEU', hmnu_out,      pcols, lchnk)
+      call outfld('ZMMSED', hmnd_out,      pcols, lchnk)
    else
       call outfld('ZMMU', mu_out(1,1), pcols, lchnk)
       call outfld('ZMMD', md_out(1,1), pcols, lchnk)
+      call outfld('ZMMSEU', hmnu_out(1,1), pcols, lchnk)
+      call outfld('ZMMSED', hmnd_out(1,1), pcols, lchnk)
    endif
 
    ftem(:ncol,:pver) = ptend_loc%s(:ncol,:pver)/cpair

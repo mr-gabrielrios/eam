@@ -919,6 +919,8 @@ subroutine zm_conv_tend(pblh    ,mcon    ,cme     , &
    md_out(:,:) = 0._r8
    
    ! GR: initialize MSE transport fields
+   dcape(:) = 0._r8
+   hmn(:,:) = 0._r8
    hmnu_out(:,:) = 0._r8
    hmnd_out(:,:) = 0._r8
    

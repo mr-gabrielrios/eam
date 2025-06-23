@@ -287,6 +287,9 @@ subroutine diag_init()
    call addfld ('OMEGA100',horiz_only,    'A','Pa/s','Vertical velocity at 100 mbar pressure surface')
    call addfld ('OMEGABOT',horiz_only,    'A','Pa/s','Lowest model level vertical velocity')
 
+   ! GR: custom diagnostic fields added for MSE analysis
+   call addfld ('MSE', (/ 'lev' /), 'A', 'J/kg', 'Moist static energy')
+
    call addfld ('RH1000',horiz_only,    'A','%','Relative humidity at 1000 mbar pressure surface')
    call addfld ('RH975',horiz_only,    'A','%','Relative humidity at 975 mbar pressure surface')
    call addfld ('RH950',horiz_only,    'A','%','Relative humidity at 950 mbar pressure surface')
@@ -1758,7 +1761,16 @@ end subroutine diag_conv_tend_ini
     do k=1,pver
       ftem1(:ncol,k)=state%phis(:ncol)  !! surface geopotential in units (m2/s2)
     end do
+   
+    ! GR: output MSE diagnostic 
+    ftem(:ncol,:) = cpair*state%t(:ncol,:) + latvap*state%q(:ncol,:,1) + ftem1(:ncol,:)
+    call outfld('MSE    ',ftem,    pcols,   lchnk     )
 
+    !! temporary variable to get surface geopotential in dimensions of (ncol,pver)
+    do k=1,pver
+      ftem1(:ncol,k)=state%phis(:ncol)  !! surface geopotential in units (m2/s2)
+    end do
+    
     !! calculate sum of sensible, kinetic, latent, and surface geopotential energy
     !! E=CpT+PHIS+Lv*q+(0.5)*(u^2+v^2)
     ftem(:ncol,:) = (cpair*state%t(:ncol,:) +  ftem1(:ncol,:) + latvap*state%q(:ncol,:,1) + &
